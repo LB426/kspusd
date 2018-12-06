@@ -1,0 +1,72 @@
+#!/bin/bash
+# KSPUSD daemon script
+source /etc/sysconfig/kspusd
+WORK_PATH="/usr/local/kspus"
+NAME=kspusd
+PIDFILE=/var/run/kspusd.pid
+SCRIPTNAME=/etc/init.d/$NAME
+
+case "$1" in 
+start)
+    printf "%-50s" "Startig $NAME..."
+    cd $WORK_PATH
+    /usr/local/kspus/kspusd $OPTIONS
+    sleep 5
+    if [ -f $PIDFILE ]; then
+      printf "%s\n" "OK"
+      exit_code=0
+    else  
+      printf "%s\n" "Start FAILED."
+      exit_code=1
+    fi
+;;
+status)
+    if [ -f $PIDFILE ]; then
+      RUNNINGPID="$(cat $PIDFILE)"
+      RUNNINGPID_EX="$(ps -e | awk '{print $1}' | grep ${RUNNINGPID})"
+      if [[ "$RUNNINGPID" == "$RUNNINGPID_EX"  ]]; then
+        echo "RUNNINGPID=$RUNNINGPID"
+        echo "RUNNINGPID_EX=$RUNNINGPID_EX"
+        printf "%s\n" "Running"
+        exit_code=0
+      elif [ !-f $PIDFILE ]; then
+        printf "%s\n" "PIDFILE don't exists"
+        exit_code=5
+      elif [ -z "$RUNNINGPID" ]; then
+        printf "%s\n" "RUNNINGPID not defined"
+        exit_code=5
+      elif [ -z "$RUNNINGPID_EX" ]; then
+        printf "%s\n" "RUNNINGPID_EX not defined"
+        exit_code=5
+      else
+        printf "%s\n" "Service not running"
+        exit_code=3
+      fi
+    else
+      printf "%s\n" "Service not running"
+      exit_code=3
+    fi
+;;
+stop)
+	printf "%-50s" "Stopping $NAME"
+	PID=`cat $PIDFILE`
+	cd $WORK_PATH
+	if [ -f $PIDFILE ]; then
+		kill -SIGHUP $PID
+		printf "%s\n" "Stopped."
+		exit_code=0
+	else
+		printf "%s\n" "Pidfile not found"
+		exit_code=0
+	fi
+;;
+restart)
+	$0 stop
+	$0 start
+;;
+
+*)
+	echo "Usage: $0 {status|start|stop|restart}"
+	exit_code=1
+esac
+exit $exit_code

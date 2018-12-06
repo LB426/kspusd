@@ -1,0 +1,7 @@
+*.o
+testfiles
+kspusd
+cscope.*
+correspondence
+bin
+guts_for_pcs

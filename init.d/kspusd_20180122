@@ -1,0 +1,73 @@
+#!/bin/bash
+# KSPUSD daemon script
+source /etc/sysconfig/kspusd
+WORK_PATH="/usr/local/kspus"
+NAME=kspusd
+PIDFILE=/var/run/kspusd.pid
+SCRIPTNAME=/etc/init.d/$NAME
+
+case "$1" in 
+start)
+    if [ -f $PIDFILE ]; then
+      printf "%s\n" "KSPUSD already running..."
+      exit_code=0
+    else
+      printf "%-50s" "Startig $NAME..."
+      cd $WORK_PATH
+      $WORK_PATH/$NAME $OPTIONS
+      sleep 2
+      if [ -f $PIDFILE ]; then
+        printf "%s\n" "OK"
+        exit_code=0
+      else  
+        printf "%s\n" "Start FAILED."
+        exit_code=1
+      fi
+    fi
+;;
+status)
+    sleep 1
+    RUNNINGPID=`cat $PIDFILE`
+    if [ "$(ps axf | grep "$WORK_PATH/$NAME $OPTS" | grep -Ev "grep|status" | wc -l)" -gt "1" ]; then
+      printf "%s\n" "To many processes active. Please, kill them manually and remove pid-file" ;
+      exit_code=5
+    elif [ ! -f $PIDFILE ] && [ -n "$RUNNINGPID" ]; then
+      printf "%s\n" "Process alive but pidfile not exists" 
+      exit_code=5
+    elif [ -f $PIDFILE ] && [ -z "$RUNNINGPID" ]; then
+      printf "%s\n" "Process dead but pidfile exists" 
+      exit_code=3
+    elif [ -f $PIDFILE ] && [ -n "$RUNNINGPID" ] && [ "$(cat $PIDFILE)" != "$RUNNINGPID" ]; then
+      printf "%s\n" "PID of process do not match PID in pid-file" 
+      exit_code=5
+    elif [ -f $PIDFILE ] && [ -n "$RUNNINGPID" ] && [ "$(cat $PIDFILE)" == "$RUNNINGPID" ]; then
+      printf "%s\n" "Running" 
+      exit_code=0
+    else
+      printf "%s\n" "Service not running" 
+      exit_code=3
+    fi
+;;
+stop)
+	printf "%-50s" "Stopping $NAME"
+	PID=`cat $PIDFILE`
+	cd $WORK_PATH
+	if [ -f $PIDFILE ]; then
+		kill -SIGHUP $PID
+		printf "%s\n" "Stopped."
+		exit_code=0
+	else
+		printf "%s\n" "Pidfile not found"
+		exit_code=0
+	fi
+;;
+restart)
+	$0 stop
+	$0 start
+;;
+
+*)
+	echo "Usage: $0 {status|start|stop|restart}"
+	exit_code=1
+esac
+exit $exit_code
