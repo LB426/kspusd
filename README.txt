@@ -167,7 +167,7 @@ error_handler_timeout измеряется в минутах.
 ------------------------------------------
 [CDR]             | нет соответствия     |
 namelen=8         | нет соответствия     |
-regcode=86196     | REGION_CODE="86196"  |
+regcode=89196     | REGION_CODE="89196"  |
 cdrprefix=AXE4    | ATC_TYPE="AXE4"      |
 atsnum=001        | ATC_NUMBER="001"     |
 zz=00             | ZZ_CODE_IN_NAME="0"  |
